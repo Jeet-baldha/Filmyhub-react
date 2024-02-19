@@ -29,7 +29,6 @@ const Home = () => {
     // Fetch latest movies
     const fetchLatestMovieList = async () => {
         const response = await axios.get('http://localhost:3000/latestMovieList');
-        console.log(response.data);
         setLatestMovieList(response.data);
     };
 

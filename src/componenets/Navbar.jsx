@@ -1,9 +1,23 @@
 /* eslint-disable no-unused-vars */
-import React,{useEffect} from 'react';
+import React,{useEffect,useState} from 'react';
 import { IoSearch } from "react-icons/io5";
-import { NavLink } from 'react-router-dom';
+import { NavLink,useNavigate } from 'react-router-dom';
+import { IoPersonSharp } from "react-icons/io5";
 
 const Navbar = () => {
+    const [query,setQuery] = useState("");
+    const navigate = useNavigate();
+
+    const handleSubmit = () => {
+        console.log(query)
+        if(query != " "){
+            navigate(`/movie/search/${query}`)
+        }
+        else{
+            window.alert("Please enter movie name");
+        }
+
+    }
 
     return (
         <nav>
@@ -34,10 +48,12 @@ const Navbar = () => {
                 <div className="nav-right">
                     <ul className="flex nav-flex inner-content">
                         <li className="nav-item">
-                            <form action="/search" method="get">
+                            <form onSubmit={handleSubmit}>
                                 <input
                                     type="text"
                                     name="query"
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
                                     className="search-text"
                                     placeholder="Search here..."
                                 />
@@ -45,9 +61,10 @@ const Navbar = () => {
                                     <IoSearch style={{color:'#30E3CA',fontWeight:'500', top:'5px'}} className="fa-solid fa-magnifying-glass"></IoSearch>
                                 </button>
                             </form>
+                            
                         </li>
-                        <li className="nav-item">
-                            <i className="fa-solid fa-user" id="profile"></i>
+                        <li className="nav-item fa-user">
+                            <IoPersonSharp></IoPersonSharp>
                         </li>
                     </ul>
                 </div>

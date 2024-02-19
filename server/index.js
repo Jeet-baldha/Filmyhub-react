@@ -126,7 +126,6 @@ app.get('/search', async (req, res) => {
         const movies = await axios.get(url + `/search/movie?query=${newQuery}&include_adult=false`, config);
         res.json({
             movieList: movies.data,
-            btn: false,
         });
     } catch (error) {
         console.log(error.message);
