@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from 'react';
 import MovieCard from '../componenets/MovieCard';
 import axios from 'axios';
@@ -6,6 +7,7 @@ const MovieList = () => {
     const [movieList, setMovieList] = useState([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     const [error, setError] = useState(null);
 
     const fetchMovieList = async () => {

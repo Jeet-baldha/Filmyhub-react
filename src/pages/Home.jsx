@@ -7,32 +7,29 @@ import Header from '../componenets/Header';
 import { NavLink } from 'react-router-dom';
 
 const Home = () => {
+
     const [trendingDayList, setTrendingDayList] = useState([]);
     const [trendingWeekList, setTrendingWeekList] = useState([]);
     const [latestMovieList, setLatestMovieList] = useState([]);
     const [popularMovieList, setPopularMovieList] = useState([]);
 
-    // Assume you have a function to fetch data from the server for each section
 
-    // Fetch trending movies for the day
     const fetchTrendingDayList = async () => {
         const response = await axios.get('http://localhost:3000/trendingMovieListDay');
         setTrendingDayList(response.data.results);
     };
 
-    // Fetch trending movies for the week
     const fetchTrendingWeekList = async () => {
         const response = await axios.get('http://localhost:3000/trendingMovieListWeek');
         setTrendingWeekList(response.data.results);
     };
 
-    // Fetch latest movies
     const fetchLatestMovieList = async () => {
         const response = await axios.get('http://localhost:3000/latestMovieList');
         setLatestMovieList(response.data);
     };
 
-    // Fetch popular movies
+
     const fetchPopularMovieList = async () => {
         const response = await axios.get('http://localhost:3000/movie/popular');
         setPopularMovieList(response.data.results);
@@ -57,9 +54,9 @@ const Home = () => {
                             <div className="anchor today selected">
                                 <a href="#" className="non-clickable">Today</a>
                             </div>
-                            <div className="anchor week">
+                            {/* <div className="anchor week">
                                 <a href="#" className="non-clickable">This week</a>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                     <div className="column-content flex dayList">
@@ -82,7 +79,7 @@ const Home = () => {
                             <div className="column-container-header flex">
                                 <h1>Latest Trailers</h1>
                                 <div className="selector flex">
-                                    <div className="anchor selected">
+                                    {/* <div className="anchor selected">
                                         <a href="#" className="non-clickable">Streaming</a>
                                     </div>
                                     <div className="anchor">
@@ -93,7 +90,7 @@ const Home = () => {
                                     </div>
                                     <div className="anchor">
                                         <a href="#" className="non-clickable">On Theaters</a>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 
@@ -129,11 +126,11 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section className="popular inner-content">
+                <section  className="popular inner-content">
                     <div className="column-container-header flex">
                         <h1>What's Popular</h1>
                         <div className="selector flex">
-                            <div className="anchor selected">
+                            {/* <div className="anchor selected">
                                 <a href="#">Streaming</a>
                             </div>
                             <div className="anchor">
@@ -144,7 +141,7 @@ const Home = () => {
                             </div>
                             <div className="anchor">
                                 <a href="#">On Theaters</a>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                     <div className="popular column-content flex">

@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import 'dotenv/config';
 import express from 'express';
 import axios from 'axios';
 import bodyParser from 'body-parser';
@@ -6,8 +7,10 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors'
-// import * as auth from './authentication.js';
+import * as auth from './authentication.js';
 import User from './database.js';
+
+const ObjectId = mongoose.Types.ObjectId;
 
 const app = express();
 app.use(cors());
@@ -150,88 +153,170 @@ app.get('/movie/:id', async (req, res) => {
 // Add to Watchlist route
 app.post('/movie/add', async (req, res) => {
     const id = req.body.id;
+    const userID = req.body.userID;
+    try {
+        const user = await User.findOne({ _id: userID });
 
-    
-        const userID = req.user._id;
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
-        try {
-            const user = await User.findOne({ _id: userID });
+        const movie = {
+            movieId: id
+        }
 
-            if (user.watchList.includes(id)) {
+        if (user) {
+
+            if (user.watchList && user.watchList.length > 0 && user.watchList.find(movie => movie.movieId === id)){
                 res.status(200).json({ message: 'Movie is already in watchList' });
-            } else {
+            }
+            else{
                 const result = await User.updateOne(
                     { _id: userID },
-                    { $push: { watchList: id } }
+                    { $push: { watchList: movie } }
                 );
-                res.status(201).json({ message: 'Movie added to watchList successfully' });
+                res.status(200).json({ message: 'Movie added to watchList successfully' });
             }
-        } catch (error) {
-            console.error('Error updating watchList:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+
+
         }
-});
-
-// Watchlist route
-app.get('/watchlist', async (req, res) => {
-    try {
-            const userID = req.user._id;
-            const user = await User.findById(userID);
-
-            let movieList = {
-                results: []
-            };
-
-            if (user.watchList.length > 0) {
-                const axiosPromises = user.watchList.map(async (id) => {
-                    const movieDetails = await axios.get(`${url}movie/${id}`, config);
-                    return movieDetails.data;
-                });
-
-                const movieDetailsArray = await Promise.all(axiosPromises);
-
-                movieList.results = movieDetailsArray;
-
-                res.json({
-                    movieList: movieList,
-                    btn: false,
-                });
-            } else {
-                res.json({
-                    message: 'Please add Movie in watchList',
-                    btn: false,
-                });
-            }
     } catch (error) {
-        console.error('Error fetching watchlist:', error);
+        console.error('Error updating watchList:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// Signup route
-// app.get('/signup', (req, res) => {
-//     res.status(200).json({ message: 'Signup route' });
-// });
 
-// app.post('/signup', auth.signup);
+// Watchlist route
+app.get('/watchlist', async (req, res) => {
+    try {
+        const userID = req.headers.userid;
+        const user = await User.findById(userID);
+
+        let movieList = {
+            results: []
+        };
+
+        if (user.watchList.length > 0) {
+            const axiosPromises = user.watchList.map(async (movie) => {
+                const movieDetails = await axios.get(`${url}movie/${movie.movieId}`, config);
+                return movieDetails.data;
+            });
+
+            const movieDetailsArray = await Promise.all(axiosPromises);
+
+            movieList.results = movieDetailsArray;
+
+            res.json({
+                movieList: movieList,
+                btn: false,
+            });
+        } else {
+            res.json({
+                message: 'Please add Movie in watchList',
+                btn: false,
+            });
+        }
+} catch (error) {
+    console.error('Error fetching watchlist:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+}
+});
+
+app.get('/watchlist/:id', async (req, res) => {
+
+    const id = Number(req.params.id);
+    const userID = req.headers.userid;
+    console.log(typeof(id));
+
+    try {
+        const user = await User.findOne({ _id: userID });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+
+        if (user) {
+
+            if (user.watchList && user.watchList.length > 0 && user.watchList.find(movie => movie.movieId === id)){
+                console.log(true)
+                res.status(200).send(true);
+            }
+            else{
+                console.log(false);
+                res.status(200).send(false);
+            }
+
+
+        }
+    } catch (error) {
+        console.error('Error updating watchList:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+
+})
+
+app.delete('/watchlist/:id', async (req, res) => {
+    const userId = req.headers.userid;
+    const movieId = req.params.id;
+
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID not provided in headers' });
+    }
+
+    try {
+        const userObjectId = new ObjectId(userId);
+
+        const user = await User.findOne({ _id: userObjectId });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const watchList = user.watchList || [];
+
+        // Remove the movie from the watchList array
+        const updatedWatchList = watchList.filter(movie => movie.movieId.toString() !== movieId);
+
+        // Update the user's watchList with the new array
+        user.watchList = updatedWatchList;
+        console.log(user.watchList);
+        await user.save();
+
+        res.status(200).json({ message: 'Movie deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
+
+// Signup route
+app.get('/signup', (req, res) => {
+    res.status(200).json({ message: 'Signup route' });
+});
+
+app.post('/signup', auth.signup);
 
 // Facebook authentication routes
-// app.get('/auth/facebook', passport.authenticate('facebook'));
-// app.get('/auth/facebook/user', auth.facebookAuth);
+app.get('/auth/facebook', passport.authenticate('facebook'));
+app.get('/auth/facebook/user', auth.facebookAuth);
 
-// // Google authentication routes
-// app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
-// app.get('/auth/google/user', auth.googleAuth);
+// Google authentication routes
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+app.get('/auth/google/user', auth.googleAuth);
 
-// // Login route
-// app.get('/login', (req, res) => {
-//     res.status(200).json({ message: 'Login route' });
-// });
+// Login route
+app.get('/login', (req, res) => {
+    res.status(200).json({ message: 'Login route' });
+});
 
-// app.post('/login', auth.login);
+app.post('/login', auth.login);
 
-// // Logout route
-// app.get('/logout', auth.logout);
+// Logout route
+app.get('/logout', auth.logout);
 
 app.listen(port, () => {
     console.log('listening on port ' + port);

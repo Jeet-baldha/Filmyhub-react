@@ -1,13 +1,17 @@
+import 'dotenv/config';
 import passport from 'passport';
-import User from './databse.js';
+import User from './database.js';
 import { Strategy as LocalStrategy } from 'passport-local';
+// eslint-disable-next-line no-unused-vars
 import GoogleStrategy from 'passport-google-oauth20'
+// eslint-disable-next-line no-unused-vars
 import FacebookStrategy from 'passport-facebook'
 
 // --------------------------------  Strategy ----------------------------------------------------
 
 passport.use(new LocalStrategy((usernameOrEmail, password, done) => {
-    User.findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] })
+    console.log(usernameOrEmail);
+    User.findOne( { email: usernameOrEmail } )
         .then(user => {
             if (!user) {
                 return done(null, false, { message: 'Incorrect username or email.' });
@@ -33,40 +37,41 @@ passport.use(new LocalStrategy((usernameOrEmail, password, done) => {
 }));
 
 
-passport.use(new FacebookStrategy({
-    clientID: process.env.FACEBOOK_APP_ID,
-    clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "https://filmyhub.jeetbaldha.tech/auth/facebook/user",
-    profileFields: ['id', 'displayName', 'photos', 'email']
-},
-    async function (accessToken, refreshToken, profile, cb) {
-        try {
-            let nuser = await User.findOne({ facebookId: profile.id });
+// passport.use(new FacebookStrategy({
+//     clientID: process.env.FACEBOOK_APP_ID,
+//     clientSecret: process.env.FACEBOOK_APP_SECRET,
+//     callbackURL: "https://filmyhub.jeetbaldha.tech/auth/facebook/user",
+//     profileFields: ['id', 'displayName', 'photos', 'email']
+// },
+//     async function (accessToken, refreshToken, profile, cb) {
+//         try {
+//             let nuser = await User.findOne({ facebookId: profile.id });
 
-            if (!nuser) {
-                nuser = new User({
-                    facebookId: profile.id,
-                    username: profile.displayName,
-                })
-                await nuser.save();
+//             if (!nuser) {
+//                 nuser = new User({
+//                     facebookId: profile.id,
+//                     username: profile.displayName,
+//                 })
+//                 await nuser.save();
 
-                return cb(null, nuser);
-            }
-        } catch (error) {
-            return cb(error, null);
-        }
-    }
-));
+//                 return cb(null, nuser);
+//             }
+//         } catch (error) {
+//             return cb(error, null);
+//         }
+//     }
+// ));
 
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://filmyhub.jeetbaldha.tech/auth/google/user",
+    clientID: "104348928740-pr9v5oo3k9eso0bum98m0do25v8lbqde.apps.googleusercontent.com",
+    clientSecret: "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",
+    callbackURL: "http://localhost:5173/auth/google/user",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
 },
     async function (accessToken, refreshToken, profile, cb) {
         // Use the findOrCreate method provided by the plugin
+        console.log("heke")
         try {
             let user = await User.findOne({ googleId: profile.id });
             const username = profile.displayName.replace(' ', '');
@@ -92,31 +97,52 @@ passport.use(new GoogleStrategy({
 // ---------------------------------------------------------------- Request handeling ----------------------------------------------------------------
 export const signup = (req, res) => {
 
-    User.register({ username: req.body['username'], email: req.body.email }, req.body['password'], function (err, nuser) {
-        if (err) {
-            console.log(err.message);
-            res.redirect('/signup');
-        }
-        else {
-            passport.authenticate('local')(req, res, () => {
-                res.redirect('/');
-            });
-        }
-    })
+    try {
+        User.register({ username: req.body['username'], email: req.body.email }, req.body['password'], function (err, nuser) {
+            if (err) {
+                res.status(400).send({message: err.message});
+            }
+            else {
+                passport.authenticate('local')(req, res, () => {
+                    res.status(200).send({message: 'hello ' + req.body.username + '!',userID:nuser._id,userName:req.body.username});
+                });
+            }
+        })
+    } catch (error) {
+        res.status(400).send({message: error.message});
+    }
 
 }
 
 export const login = (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/',
-        failureRedirect: '/login',
-        failureFlash: true, // Enable flash messages if needed
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            console.log(info.message);
+            return res.status(200).json({
+                message: info.message,
+                authenticated: false
+            });
+        }
+        req.logIn(user, (loginErr) => {
+            if (loginErr) {
+                return next(loginErr);
+            }
+            return res.status(200).json({
+                message: 'User login successful',
+                userId: user._id,
+                username: req.body.username
+            });
+        });
     })(req, res, next);
 };
 
 
 export const logout = (req, res) => {
     req.logout(function (err) {
+        // eslint-disable-next-line no-undef
         if (err) { return next(err); }
         res.redirect('/');
     })

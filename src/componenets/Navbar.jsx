@@ -3,11 +3,31 @@ import React,{useEffect,useState} from 'react';
 import { IoSearch } from "react-icons/io5";
 import { NavLink,useNavigate } from 'react-router-dom';
 import { IoPersonSharp } from "react-icons/io5";
+import { useSelector,useDispatch } from 'react-redux';
+import { logout } from '../store/authSlice';
+
 
 const Navbar = () => {
     const [query,setQuery] = useState("");
     const navigate = useNavigate();
+    const user = useSelector( state => state.auth.userName)
+    let [userName,setUserName] = useState(user) ;
+    const dispatch = useDispatch();
+    const [display,setDisplay] = useState(false) ;
 
+    useEffect(() => {
+        updateUser();
+    },[user]);
+    
+
+
+    const updateUser = () => {
+        setUserName(user);
+    }
+    const handleLogout = () => {
+        dispatch(logout());
+        setUserName(null)
+    };
     const handleSubmit = () => {
         console.log(query)
         if(query != " "){
@@ -20,6 +40,7 @@ const Navbar = () => {
     }
 
     return (
+        <>
         <nav>
             <i className="fa-solid fa-bars" id="menu-btn"></i>
             <i className="fa-solid fa-user" id="user-btn"></i>
@@ -63,13 +84,26 @@ const Navbar = () => {
                             </form>
                             
                         </li>
-                        <li className="nav-item fa-user">
+                        <li className="nav-item fa-user"  onMouseEnter={ () => setDisplay(true)} onMouseLeave={ () => setDisplay(false)}>
                             <IoPersonSharp></IoPersonSharp>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
+        {userName ? <div className="signup drop-down-box" style={{display:display ? 'block' : 'none'}} onMouseEnter={ () => setDisplay(true)} onMouseLeave={ () => setDisplay(false)}>
+            <li className="drop-down-item">{userName}</li><hr />
+            <li className="drop-down-item" onClick={ handleLogout }>logout</li>
+        </div> : 
+        
+        <div className="signup drop-down-box" style={{display:display ? 'block' : 'none'}} onMouseEnter={ () => setDisplay(true)} onMouseLeave={ () => setDisplay(false)}>
+            <li className="drop-down-item"><NavLink to={'/auth/signup'}>signup</NavLink></li><hr />
+            <li className="drop-down-item"> <NavLink to={'/auth/login'}>Login</NavLink></li>
+        </div>
+        }
+        
+        
+        </> 
     );
 };
 
