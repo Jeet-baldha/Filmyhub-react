@@ -64,8 +64,8 @@ passport.use(new LocalStrategy((usernameOrEmail, password, done) => {
 
 
 passport.use(new GoogleStrategy({
-    clientID: "104348928740-pr9v5oo3k9eso0bum98m0do25v8lbqde.apps.googleusercontent.com",
-    clientSecret: "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",
+    clientID: "",
+    clientSecret: "",
     callbackURL: "http://localhost:5173/auth/google/user",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
 },
